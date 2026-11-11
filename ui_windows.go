@@ -150,6 +150,9 @@ func settingsServer() error {
 			PollSeconds  *int    `json:"poll_seconds"`
 			OffMode      *string `json:"off_mode"`
 			StartAtLogin *bool   `json:"start_at_login"`
+			LockAfterOff *bool   `json:"lock_after_off"`
+			LockMinutes  *int    `json:"lock_after_minutes"`
+			WakeCtrl     *bool   `json:"wake_double_ctrl"`
 		}
 		if err := decode(r, &b, 4<<10); err != nil {
 			return nil, err
@@ -169,8 +172,21 @@ func settingsServer() error {
 			if b.OffMode != nil {
 				s.OffMode = *b.OffMode
 			}
+			if b.LockAfterOff != nil {
+				s.LockAfterOff = *b.LockAfterOff
+			}
+			if b.LockMinutes != nil {
+				if *b.LockMinutes == 0 {
+					return errors.New("lock after 1 to 240 minutes")
+				}
+				s.LockAfterMinutes = *b.LockMinutes
+			}
+			if b.WakeCtrl != nil {
+				s.WakeDoubleCtrl = *b.WakeCtrl
+			}
 			return nil
 		})
+		setCtrlHook(store.Get().WakeDoubleCtrl)
 		return nil, err
 	})
 
@@ -391,6 +407,9 @@ func stateJSON() map[string]any {
 			"off_mode":               set.OffMode,
 			"start_at_login":         on,
 			"start_entry_stale":      on && !thisExe,
+			"lock_after_off":         set.LockAfterOff,
+			"lock_after_minutes":     set.LockAfterMinutes,
+			"wake_double_ctrl":       set.WakeDoubleCtrl,
 		},
 		"mqtt":         set.MQTT,
 		"password_set": passwordSet(),

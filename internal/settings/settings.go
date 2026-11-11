@@ -20,7 +20,12 @@ type Settings struct {
 	OpenOnStart bool   `json:"open_settings_on_start"`
 	PollSeconds int    `json:"poll_seconds"`
 	OffMode     string `json:"off_mode"` // "standby" (VCP D6=04) or "off" (D6=05)
-	MQTT        MQTT   `json:"mqtt"`
+	// Lock Windows once every screen has been asleep for LockAfterMinutes.
+	LockAfterOff     bool `json:"lock_after_off"`
+	LockAfterMinutes int  `json:"lock_after_minutes"`
+	// Wake the screens on a double tap of Ctrl (any input when Windows is locked).
+	WakeDoubleCtrl bool `json:"wake_double_ctrl"`
+	MQTT           MQTT `json:"mqtt"`
 	// Devices remembers every monitor nodoff has seen, so the list still shows one
 	// that's unplugged, and its choices survive.
 	Devices map[string]Device `json:"devices"`
@@ -53,8 +58,9 @@ func Defaults(host string) Settings {
 		slug = "pc"
 	}
 	return Settings{
-		PollSeconds: 30,
-		OffMode:     "standby",
+		PollSeconds:      30,
+		OffMode:          "standby",
+		LockAfterMinutes: 5,
 		MQTT: MQTT{
 			Port:            1883,
 			NodeName:        host,
@@ -80,6 +86,12 @@ func (s *Settings) Normalise() error {
 	case "standby", "off":
 	default:
 		return errors.New(`"off" must mean standby or off`)
+	}
+	if s.LockAfterMinutes == 0 {
+		s.LockAfterMinutes = 5
+	}
+	if s.LockAfterMinutes < 1 || s.LockAfterMinutes > 240 {
+		return errors.New("lock after 1 to 240 minutes")
 	}
 	m := &s.MQTT
 	m.Host = strings.TrimSpace(m.Host)

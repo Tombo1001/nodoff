@@ -62,6 +62,7 @@ func main() {
 		log.Printf("settings: %v", err)
 	}
 	log.Printf("nodoff %s starting", version)
+	setCtrlHook(store.Get().WakeDoubleCtrl)
 
 	mons.publish = func(d bridge.Display) {
 		bridgeMu.Lock()

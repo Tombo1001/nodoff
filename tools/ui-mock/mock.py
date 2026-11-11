@@ -9,10 +9,11 @@ import json, sys, pathlib, http.server
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HTML = (ROOT / "ui.html").read_text(encoding="utf-8")
 STATE = {
-    "version": "0.1.0", "go": "go1.26.11", "host": "DESK-PC",
+    "version": "0.2.0", "go": "go1.26.11", "host": "DESK-PC",
     "data_dir": r"C:\Users\you\AppData\Local\nodoff",
     "general": {"open_settings_on_start": False, "poll_seconds": 30, "off_mode": "standby",
-                "start_at_login": True, "start_entry_stale": False},
+                "start_at_login": True, "start_entry_stale": False,
+                "lock_after_off": True, "lock_after_minutes": 5, "wake_double_ctrl": True},
     "mqtt": {"enabled": True, "host": "homeassistant.local", "port": 1883, "tls": False, "username": "nodoff",
              "node_name": "Desk PC", "base_topic": "nodoff/desk-pc", "discovery": True, "discovery_prefix": "homeassistant"},
     "password_set": True,

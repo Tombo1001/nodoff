@@ -51,7 +51,7 @@ The exe isn't code-signed yet, so SmartScreen may warn the first time. Each rele
 
 | Tab | What's there |
 |---|---|
-| General | Start when you sign in. Open the panel on start. What "off" means (standby or power off). How often to re-read the monitors |
+| General | Start when you sign in. Open the panel on start. What "off" means (standby or power off). How often to re-read the monitors. Lock the PC some minutes after the screens go to sleep. Double-tap Ctrl to wake the screens |
 | Devices | Discover monitors. Per monitor: publish to MQTT, a name for Home Assistant, a live brightness slider, Wake, Sleep, and a sleep-and-wake test |
 | MQTT | Broker, port, TLS, username, password. The PC's name in Home Assistant, the base topic, discovery on or off, the discovery prefix |
 | About | Version, the settings folder and the log |
@@ -80,6 +80,7 @@ With discovery on, nodoff also publishes `homeassistant/light/<node>/<id>/config
 - **The MQTT password is in Windows Credential Manager** (generic credential `nodoff/mqtt`, this PC only). It's never written to `settings.json` or the log, and the settings panel can set or clear it but never read it back.
 - **The settings panel is local and locked to its own window.** It listens on a random `127.0.0.1` port, checks the `Host` header (which stops DNS-rebinding attacks from web pages), rejects other origins, and needs a random key that changes each start. The page runs under a strict Content Security Policy with a per-load script nonce, and builds its DOM without `innerHTML`.
 - **MQTT input is checked.** nodoff only acts on its own command topics, for monitors you published, with short payloads in range. Topic settings can't contain wildcards.
+- **The keyboard hook is off unless you ask for it.** "Double-tap Ctrl to wake the screens" installs a low-level keyboard hook, which by its nature sees every key press. nodoff checks whether the key is Ctrl, keeps two timestamps and nothing else, and removes the hook when you turn the setting off. The lock screen hides key presses from all apps, so there nodoff only learns that some input happened.
 - **TLS** to the broker uses TLS 1.2 or later and checks the certificate against the ones Windows trusts.
 - CI runs `govulncheck` against the Windows build, and the release workflow refuses to build if it finds anything.
 

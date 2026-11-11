@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0 (unreleased)
+
+- New setting: lock the PC a set number of minutes after every screen has gone to sleep.
+- New setting: double-tap Ctrl to wake the screens. On the lock screen, any key or mouse movement wakes them.
+
 ## 0.1.1 (unreleased)
 
 - Opening settings while the panel is already open brings that window to the front. Before, every open started another window.

@@ -194,7 +194,7 @@ func (s *monitorService) with(id string, fn func(m *ddc.Monitor, st *monState) e
 
 // SetPower wakes the monitor, or sends it to standby (or off, per the setting).
 func (s *monitorService) SetPower(id string, on bool) error {
-	return s.with(id, func(m *ddc.Monitor, st *monState) error {
+	err := s.with(id, func(m *ddc.Monitor, st *monState) error {
 		s.mu.Lock()
 		caps := st.caps
 		s.mu.Unlock()
@@ -211,6 +211,10 @@ func (s *monitorService) SetPower(id string, on bool) error {
 		log.Printf("%s: power %s (D6=%02X)", id, map[bool]string{true: "on", false: "off"}[on], v)
 		return nil
 	})
+	if err == nil {
+		notePower(id, on)
+	}
+	return err
 }
 
 // offCode picks the D6 value for "off": the setting's choice if the monitor lists it,

@@ -2,7 +2,7 @@
 
 ## Status on 2026-11-11
 
-Version 0.1.1 is built and running on the test PC (two Lenovo L28u-30). Checked so far:
+Version 0.2.0 is built and running on the test PC (two Lenovo L28u-30). Checked so far:
 
 - [x] Discovery finds both monitors and names them from the EDID (IDs `len65fa_v9k27xqa`, `len65fa_v9k31mtd`).
 - [x] MQTT: connects, publishes status, availability, power and brightness, and the Home Assistant discovery configs (checked against a throwaway Mosquitto, not a real Home Assistant yet).
@@ -11,6 +11,8 @@ Version 0.1.1 is built and running on the test PC (two Lenovo L28u-30). Checked 
 - [ ] **Power over DDC/CI is unconfirmed.** Sending `D6=04` (standby) to the left monitor logged fine, but 5 s later the monitor read back `D6=01` (on). Either it ignored standby while it still had a picture, or it slept and reports on. Needs eyes on the screen. If standby doesn't stick, try `D6=05` ("Power off" in General), and check whether it then wakes over DDC.
 - [ ] The settings panel has only been seen in a browser against `tools/ui-mock`, not in the Edge window on Windows. Check it there, and check the tray icon and menu.
 - [ ] Left and right may be the wrong way round: positions come from each display's desktop X coordinate. Confirm against the real desk.
+
+- [ ] Lock after screens-off and double Ctrl (0.2.0) are untested on a real desk. Check: the lock fires after the set minutes; double Ctrl wakes the screens when unlocked; a key press wakes them on the lock screen (this depends on Windows updating the last-input time there).
 
 ## Next
 

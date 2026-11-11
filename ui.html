@@ -107,6 +107,14 @@ footer .dot.ok { background: var(--good); } footer .dot.bad { background: var(--
         <div class="row"><div class="lbl">Check the monitors every<span class="hint">Picks up changes made with the monitor's own buttons. Commands from MQTT apply straight away</span></div>
           <div class="ctl"><input type="number" id="poll_seconds" min="5" max="3600" step="5"><span class="hint">seconds</span></div></div>
       </div>
+      <h2>While the screens are asleep</h2>
+      <div class="card">
+        <div class="row"><div class="lbl">Lock this PC<span class="hint">Locks Windows once nodoff has put every screen to sleep and none has woken for this long</span></div>
+          <div class="ctl"><span class="hint">after</span><input type="number" id="lock_after_minutes" min="1" max="240" step="1"><span class="hint">minutes</span>
+            <label class="switch"><input type="checkbox" id="lock_after_off"><span></span></label></div></div>
+        <div class="row"><div class="lbl">Double-tap Ctrl to wake the screens<span class="hint">Tap Ctrl twice quickly and every screen wakes. On the lock screen Windows hides key presses from apps, so there any key or mouse movement wakes them</span></div>
+          <label class="switch"><input type="checkbox" id="wake_double_ctrl"><span></span></label></div>
+      </div>
     </section>
 
     <section id="devices">
@@ -230,6 +238,9 @@ function render(s) {
   $("open_settings_on_start").checked = g.open_settings_on_start;
   $("off_mode").value = g.off_mode;
   if (document.activeElement !== $("poll_seconds")) $("poll_seconds").value = g.poll_seconds;
+  $("lock_after_off").checked = g.lock_after_off;
+  if (document.activeElement !== $("lock_after_minutes")) $("lock_after_minutes").value = g.lock_after_minutes;
+  $("wake_double_ctrl").checked = g.wake_double_ctrl;
   renderMQTT(s, false);
   renderMonitors(s.monitors);
   renderStatus(s.mqtt_status);
@@ -371,6 +382,9 @@ $("start_at_login").addEventListener("change", e => saveGeneral({ start_at_login
 $("open_settings_on_start").addEventListener("change", e => saveGeneral({ open_settings_on_start: e.target.checked }));
 $("off_mode").addEventListener("change", e => saveGeneral({ off_mode: e.target.value }));
 $("poll_seconds").addEventListener("change", e => saveGeneral({ poll_seconds: +e.target.value }));
+$("lock_after_off").addEventListener("change", e => saveGeneral({ lock_after_off: e.target.checked }));
+$("lock_after_minutes").addEventListener("change", e => saveGeneral({ lock_after_minutes: +e.target.value }));
+$("wake_double_ctrl").addEventListener("change", e => saveGeneral({ wake_double_ctrl: e.target.checked }));
 
 $("discover").addEventListener("click", async (e) => {
   const b = e.target; b.disabled = true; b.textContent = "Looking…";
