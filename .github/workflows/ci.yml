@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: GOOS=windows go vet ./...
+      - run: go test ./...
+      - name: Known vulnerabilities (Windows build)
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          GOOS=windows govulncheck ./...
+      - name: Build the Windows exe
+        run: |
+          go run ./tools/mkrsrc
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -buildvcs=false -ldflags "-s -w -H windowsgui -buildid=" -o nodoff.exe .

@@ -1,0 +1,59 @@
+name: Release
+
+# Push a tag such as v0.1.0 to build nodoff.exe and attach it to a draft release.
+# The tag has to match the version in version.go.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Check the tag matches version.go
+        run: |
+          v=$(sed -n 's/^const version = "\(.*\)"$/\1/p' version.go)
+          [ "v$v" = "$GITHUB_REF_NAME" ] || { echo "Tag $GITHUB_REF_NAME doesn't match version.go ($v)"; exit 1; }
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+
+      - name: Test and scan
+        run: |
+          go vet ./... && GOOS=windows go vet ./... && go test ./...
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          GOOS=windows govulncheck ./...
+
+      - name: Build
+        run: |
+          go run ./tools/mkrsrc
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -buildvcs=false -ldflags "-s -w -H windowsgui -buildid=" -o nodoff.exe .
+
+      - name: Package
+        run: |
+          name="nodoff-$VERSION-windows-amd64"
+          mkdir -p "out/$name"
+          cp nodoff.exe scripts/install.ps1 README.md THIRD-PARTY-NOTICES.md "out/$name/"
+          [ -f LICENSE ] && cp LICENSE "out/$name/"
+          (cd out && zip -qr "$name.zip" "$name")
+          cp nodoff.exe out/nodoff.exe
+          (cd out && sha256sum "$name.zip" nodoff.exe > SHA256SUMS.txt && cat SHA256SUMS.txt)
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          awk -v v="$VERSION" '$0 ~ "^## " v "( |$)" { on = 1; next } on && /^## / { exit } on { print }' CHANGELOG.md > out/notes.md
+          { echo; echo "### Checksums (SHA256)"; echo; echo '```'; cat out/SHA256SUMS.txt; echo '```'; } >> out/notes.md
+
+      - name: Create a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --draft --title "nodoff $VERSION" --notes-file out/notes.md \
+            "out/nodoff-$VERSION-windows-amd64.zip" out/nodoff.exe out/SHA256SUMS.txt

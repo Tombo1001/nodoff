@@ -1,0 +1,4 @@
+/dist/
+*.exe
+*.syso
+CLAUDE.local.md

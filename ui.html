@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>nodoff</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<meta name="theme-color" content="#1d1d1f">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+  --bg: #1d1d1f; --side: #232325; --card: #2a2a2c; --line: #38383b;
+  --text: #ececee; --muted: #a0a0a6; --accent: #ffb547; --accent-ink: #2b1d05;
+  --bad: #ff6b6b; --good: #5fd38d;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+  font: 15px/1.4 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+.app { display: grid; grid-template-columns: 220px 1fr; height: 100vh; }
+nav { background: var(--side); border-right: 1px solid var(--line); padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+.logo { display: flex; align-items: center; gap: 10px; font: 800 28px/1 "Segoe UI Variable Display", "Segoe UI", sans-serif; letter-spacing: -1px;
+  color: var(--text); padding: 4px 8px 20px; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.logo img { width: 40px; height: 40px; }
+.logo span { color: var(--accent); }
+nav button { all: unset; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 9px;
+  font-weight: 600; color: var(--muted); cursor: pointer; }
+nav button svg { width: 20px; height: 20px; flex: none; }
+nav button:hover { background: #2f2f32; color: var(--text); }
+nav button.on { background: var(--accent); color: var(--accent-ink); }
+nav button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { overflow-y: auto; padding: 22px 28px 80px; }
+section { display: none; max-width: 700px; }
+section.on { display: block; }
+h2 { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 24px 4px 8px; }
+h2:first-child { margin-top: 0; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+.card + .card { margin-top: 14px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 18px; min-height: 58px; }
+.row + .row { border-top: 1px solid var(--line); }
+.lbl { font-weight: 600; min-width: 0; }
+.hint { display: block; font-weight: 400; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.ctl { display: flex; align-items: center; gap: 10px; flex: none; }
+select, input[type=text], input[type=password], input[type=number] { background: #232325; color: var(--text); border: 1px solid #4a4a4e; border-radius: 8px;
+  padding: 7px 10px; font: inherit; width: 260px; }
+input[type=number] { width: 100px; text-align: right; }
+select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.btn { all: unset; cursor: pointer; padding: 7px 13px; border: 1px solid #4a4a4e; border-radius: 8px; font-weight: 600; background: #232325; white-space: nowrap; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn[disabled] { opacity: .5; pointer-events: none; }
+input[type=range] { width: 200px; accent-color: var(--accent); }
+.val { width: 44px; text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.switch { position: relative; width: 50px; height: 28px; flex: none; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch span { position: absolute; inset: 0; background: #3c3c40; border-radius: 99px; transition: .15s; cursor: pointer; }
+.switch span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: .15s; }
+.switch input:checked + span { background: var(--accent); }
+.switch input:checked + span::after { transform: translateX(22px); }
+.switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: #3a3a3e; color: var(--muted); vertical-align: 2px; margin-left: 8px; }
+.chip.on { background: rgba(95,211,141,.16); color: var(--good); }
+.chip.sleep { background: rgba(255,181,71,.16); color: var(--accent); }
+.mon-title { font-size: 16px; font-weight: 700; }
+.err { color: var(--bad); font-size: 13px; }
+.ok { color: var(--good); font-size: 13px; }
+.note { color: var(--muted); font-size: 13.5px; margin: 10px 4px 0; }
+.empty { padding: 16px 18px; color: var(--muted); }
+code { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; color: #d6d6da; background: #232325; padding: 1px 5px; border-radius: 5px; }
+.topics { padding: 12px 18px 16px; font-size: 13px; color: var(--muted); }
+.topics div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+.about-hero { display: flex; align-items: center; gap: 18px; padding: 20px 18px; }
+.about-hero img { width: 72px; height: 72px; }
+.about-hero .big { font: 800 30px/1 "Segoe UI Variable Display", "Segoe UI", sans-serif; letter-spacing: -1px; }
+.about-hero .big span { color: var(--accent); }
+footer { position: fixed; left: 220px; right: 0; bottom: 0; display: flex; justify-content: space-between; padding: 10px 28px;
+  background: var(--bg); border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+footer .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #666; margin-right: 6px; }
+footer .dot.ok { background: var(--good); } footer .dot.bad { background: var(--bad); }
+.toast { position: fixed; right: 24px; bottom: 54px; background: var(--accent); color: var(--accent-ink); font-weight: 700;
+  padding: 6px 12px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 420px; }
+.toast.show { opacity: 1; }
+.toast.bad { background: var(--bad); color: #2b0505; }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav>
+    <div class="logo"><img src="/logo.png" alt=""><b>nod<span>off</span></b></div>
+    <button data-tab="general" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>General</button>
+    <button data-tab="devices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Devices</button>
+    <button data-tab="mqtt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.5a7 7 0 0 1 7-7M5 18a12.5 12.5 0 0 1 12.5-12.5"/><circle cx="6" cy="18" r="1.5" fill="currentColor"/><path d="M12 19a7 7 0 0 1 7-7"/></svg>MQTT</button>
+    <button data-tab="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>About</button>
+  </nav>
+
+  <main>
+    <section id="general" class="on">
+      <h2>Start-up</h2>
+      <div class="card">
+        <div class="row"><div class="lbl">Start when I sign in<span class="hint" id="startHint">nodoff starts in the tray each time you sign in to Windows</span></div>
+          <label class="switch"><input type="checkbox" id="start_at_login"><span></span></label></div>
+        <div class="row"><div class="lbl">Open settings when nodoff starts<span class="hint">Off: nodoff starts quietly in the tray. Double-click the tray icon for settings</span></div>
+          <label class="switch"><input type="checkbox" id="open_settings_on_start"><span></span></label></div>
+      </div>
+      <h2>Behaviour</h2>
+      <div class="card">
+        <div class="row"><div class="lbl">"Off" puts a monitor in<span class="hint">Standby wakes again over DDC/CI on most monitors. Power off is deeper, and some monitors only wake from it with their own button</span></div>
+          <div class="ctl"><select id="off_mode"><option value="standby">Standby (recommended)</option><option value="off">Power off</option></select></div></div>
+        <div class="row"><div class="lbl">Check the monitors every<span class="hint">Picks up changes made with the monitor's own buttons. Commands from MQTT apply straight away</span></div>
+          <div class="ctl"><input type="number" id="poll_seconds" min="5" max="3600" step="5"><span class="hint">seconds</span></div></div>
+      </div>
+    </section>
+
+    <section id="devices">
+      <h2>Monitors</h2>
+      <div class="card">
+        <div class="row"><div class="lbl">Find monitors<span class="hint">Asks every connected monitor what it supports over DDC/CI. Takes a few seconds</span></div>
+          <button class="btn primary" id="discover">Discover</button></div>
+      </div>
+      <div id="monList"></div>
+      <p class="note">Only monitors with "Publish to MQTT" turned on appear in Home Assistant. A monitor that doesn't answer may have DDC/CI turned off in its own on-screen menu.</p>
+    </section>
+
+    <section id="mqtt">
+      <h2>Broker</h2>
+      <div class="card">
+        <div class="row"><div class="lbl">Connect to MQTT</div>
+          <label class="switch"><input type="checkbox" id="m_enabled"><span></span></label></div>
+        <div class="row"><div class="lbl">Broker<span class="hint">Host name or IP address, e.g. homeassistant.local</span></div>
+          <input type="text" id="m_host" spellcheck="false" autocomplete="off"></div>
+        <div class="row"><div class="lbl">Port<span class="hint">1883 is usual, 8883 with TLS</span></div>
+          <input type="number" id="m_port" min="1" max="65535"></div>
+        <div class="row"><div class="lbl">Use TLS<span class="hint">Checks the broker's certificate against the ones Windows trusts</span></div>
+          <label class="switch"><input type="checkbox" id="m_tls"><span></span></label></div>
+        <div class="row"><div class="lbl">Username</div>
+          <input type="text" id="m_username" spellcheck="false" autocomplete="off"></div>
+        <div class="row"><div class="lbl">Password<span class="hint" id="pwHint">Saved in Windows Credential Manager, never in a file</span></div>
+          <div class="ctl"><input type="password" id="m_password" autocomplete="new-password"><button class="btn" id="pwClear">Clear</button></div></div>
+      </div>
+      <h2>Home Assistant</h2>
+      <div class="card">
+        <div class="row"><div class="lbl">This PC's name<span class="hint">The device name in Home Assistant</span></div>
+          <input type="text" id="m_node_name" maxlength="64"></div>
+        <div class="row"><div class="lbl">Base topic<span class="hint">Every topic for this PC starts with this</span></div>
+          <input type="text" id="m_base_topic" spellcheck="false"></div>
+        <div class="row"><div class="lbl">Home Assistant discovery<span class="hint">Monitors appear in Home Assistant as lights with brightness</span></div>
+          <label class="switch"><input type="checkbox" id="m_discovery"><span></span></label></div>
+        <div class="row"><div class="lbl">Discovery prefix<span class="hint">Leave as homeassistant unless you changed it in Home Assistant</span></div>
+          <input type="text" id="m_discovery_prefix" spellcheck="false"></div>
+      </div>
+      <div class="row" style="padding:14px 4px; justify-content:flex-start; gap:14px"><button class="btn primary" id="mqttSave">Save and connect</button><span id="mqttMsg" class="hint"></span></div>
+      <h2>Topics</h2>
+      <div class="card"><div class="topics" id="topicList"></div></div>
+    </section>
+
+    <section id="about">
+      <div class="card">
+        <div class="about-hero"><img src="/logo.png" alt=""><div><div class="big">nod<span>off</span></div><span class="hint" id="verLine"></span></div></div>
+        <div class="row"><div class="lbl">What it does<span class="hint">Lets MQTT, and so Home Assistant, set each monitor's brightness and put it to sleep or wake it, over DDC/CI. Pair it with a presence sensor and your screens nod off when you leave the desk.</span></div></div>
+        <div class="row"><div class="lbl">Settings and log<span class="hint" id="dataDir"></span></div>
+          <div class="ctl"><button class="btn" data-open="folder">Open folder</button><button class="btn" data-open="log">Show log</button></div></div>
+        <div class="row"><div class="lbl">Built with<span class="hint">Eclipse Paho MQTT (EPL-2.0 / EDL-1.0), fyne systray (Apache-2.0), wincred (MIT), Go and golang.org/x/sys (BSD-3-Clause)</span></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+<footer><span><span class="dot" id="dot"></span><span id="status">Starting…</span></span><span id="ver"></span></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const params = new URLSearchParams(location.search);
+const KEY = params.get("k") || "";
+history.replaceState(null, "", "/"); // don't leave the key in the address
+const $ = (id) => document.getElementById(id);
+let state = null;
+
+async function api(path, body) {
+  const opt = { method: body === undefined ? "GET" : "POST", headers: { "X-Nodoff-Key": KEY } };
+  if (body !== undefined) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
+  const r = await fetch(path, opt);
+  let j = null;
+  try { j = await r.json(); } catch (e) { /* not JSON */ }
+  if (!r.ok) throw new Error((j && j.error) || ("HTTP " + r.status));
+  return j;
+}
+
+let toastTimer;
+function toast(msg, bad) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (bad ? " bad" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = "toast" + (bad ? " bad" : ""), bad ? 5000 : 1800);
+}
+
+// Build DOM without innerHTML, so names from monitors or settings can't inject markup.
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, "");
+    else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k instanceof Node ? k : document.createTextNode(String(k)));
+  return e;
+}
+function toggle(checked, onchange) {
+  const i = el("input", { type: "checkbox" });
+  i.checked = !!checked;
+  i.addEventListener("change", () => onchange(i.checked, i));
+  return el("label", { class: "switch" }, i, el("span"));
+}
+
+// ---------- tabs ----------
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
+  try { localStorage.setItem("tab", b.dataset.tab); } catch (e) {}
+}));
+try { const t = localStorage.getItem("tab"); if (t) document.querySelector(`nav button[data-tab="${t}"]`)?.click(); } catch (e) {}
+
+// ---------- render ----------
+function render(s) {
+  state = s;
+  const g = s.general;
+  $("start_at_login").checked = g.start_at_login;
+  $("startHint").textContent = g.start_entry_stale
+    ? "The start-up entry points at an older copy of nodoff. Turn this off and on again to fix it"
+    : "nodoff starts in the tray each time you sign in to Windows";
+  $("open_settings_on_start").checked = g.open_settings_on_start;
+  $("off_mode").value = g.off_mode;
+  if (document.activeElement !== $("poll_seconds")) $("poll_seconds").value = g.poll_seconds;
+  renderMQTT(s, false);
+  renderMonitors(s.monitors);
+  renderStatus(s.mqtt_status);
+  $("ver").textContent = "v" + s.version;
+  $("verLine").textContent = `Version ${s.version} · ${s.go} · ${s.host}`;
+  $("dataDir").textContent = s.data_dir;
+}
+
+let mqttDirty = false;
+function renderMQTT(s, force) {
+  const m = s.mqtt;
+  if (!mqttDirty || force) {
+    $("m_enabled").checked = m.enabled;
+    $("m_host").value = m.host;
+    $("m_port").value = m.port;
+    $("m_tls").checked = m.tls;
+    $("m_username").value = m.username;
+    $("m_password").value = "";
+    $("m_node_name").value = m.node_name;
+    $("m_base_topic").value = m.base_topic;
+    $("m_discovery").checked = m.discovery;
+    $("m_discovery_prefix").value = m.discovery_prefix;
+    mqttDirty = false;
+  }
+  $("m_password").placeholder = s.password_set ? "•••••••• (saved)" : "No password saved";
+  $("pwClear").disabled = !s.password_set;
+  const base = m.base_topic, id = (s.monitors.find(x => x.exposed) || s.monitors[0] || { id: "<monitor id>" }).id;
+  const rows = [
+    [`${base}/status`, "online / offline"],
+    [`${base}/${id}/power`, "ON / OFF"],
+    [`${base}/${id}/power/set`, "send ON or OFF"],
+    [`${base}/${id}/brightness`, "0 to 100"],
+    [`${base}/${id}/brightness/set`, "send 0 to 100"],
+    [`${base}/${id}/available`, "online / offline"],
+  ];
+  $("topicList").replaceChildren(...rows.map(([t, v]) => el("div", {}, el("code", {}, t), el("span", {}, v))));
+}
+
+function renderStatus(st) {
+  const dot = $("dot");
+  if (st.connected) { dot.className = "dot ok"; $("status").textContent = "Connected to MQTT"; }
+  else if (st.error === "off") { dot.className = "dot"; $("status").textContent = "MQTT is off"; }
+  else if (st.error === "connecting") { dot.className = "dot"; $("status").textContent = "Connecting to MQTT…"; }
+  else { dot.className = "dot bad"; $("status").textContent = "MQTT: " + (st.error || "not connected"); }
+}
+
+function powerChip(m) {
+  if (!m.present) return el("span", { class: "chip" }, "Not connected");
+  if (m.power === "ON") return el("span", { class: "chip on" }, "On");
+  if (m.power === "OFF") return el("span", { class: "chip sleep" }, m.power_code === 5 ? "Off" : "Asleep");
+  return el("span", { class: "chip" }, "Unknown");
+}
+
+let dragging = null; // id of a monitor whose slider is being dragged; don't redraw it
+function renderMonitors(list) {
+  if (dragging) return;
+  const box = $("monList");
+  if (!list.length) {
+    box.replaceChildren(el("div", { class: "card", style: "margin-top:14px" }, el("div", { class: "empty" }, "No monitors yet. Press Discover.")));
+    return;
+  }
+  box.replaceChildren(...list.map(m => {
+    const title = m.name || m.default_name || m.model || m.id;
+    const facts = [m.model, m.serial && ("serial " + m.serial), m.resolution, m.position && m.position !== "only" && m.position, m.primary && "main display"].filter(Boolean).join(" · ");
+    const rows = [];
+    rows.push(el("div", { class: "row" },
+      el("div", { class: "lbl" }, el("span", { class: "mon-title" }, title), powerChip(m), el("span", { class: "hint" }, facts || m.id)),
+      el("div", { class: "ctl" }, el("span", { class: "hint" }, "Publish to MQTT"),
+        toggle(m.exposed, async (on, input) => {
+          try { render(await api("/api/device", { id: m.id, exposed: on })); toast(on ? "Published" : "Removed from MQTT"); }
+          catch (e) { input.checked = !on; toast(e.message, true); }
+        }))));
+    const nameIn = el("input", { type: "text", maxlength: "64", placeholder: m.default_name || "" });
+    nameIn.value = m.name || "";
+    nameIn.addEventListener("change", async () => {
+      try { render(await api("/api/device", { id: m.id, name: nameIn.value })); toast("Name saved"); } catch (e) { toast(e.message, true); }
+    });
+    rows.push(el("div", { class: "row" }, el("div", { class: "lbl" }, "Name", el("span", { class: "hint" }, "What Home Assistant calls it. Empty uses the model and position")), nameIn));
+    if (m.present) {
+      if (m.can_brightness) {
+        const range = el("input", { type: "range", min: "0", max: "100", step: "1" });
+        range.value = m.brightness >= 0 ? m.brightness : 50;
+        const val = el("span", { class: "val" }, m.brightness >= 0 ? m.brightness + "%" : "?");
+        let timer = null, last = null;
+        const send = async () => {
+          timer = null;
+          const v = +range.value;
+          if (v === last) return;
+          last = v;
+          try { await api("/api/device/brightness", { id: m.id, value: v }); } catch (e) { toast(e.message, true); }
+        };
+        range.addEventListener("input", () => { dragging = m.id; val.textContent = range.value + "%"; if (!timer) timer = setTimeout(send, 150); });
+        range.addEventListener("change", () => { dragging = null; send(); });
+        rows.push(el("div", { class: "row" }, el("div", { class: "lbl" }, "Brightness"), el("div", { class: "ctl" }, range, val)));
+      }
+      if (m.can_power) {
+        const result = el("span", { class: "hint" });
+        const testBtn = el("button", { class: "btn", onclick: async () => {
+          testBtn.disabled = true;
+          result.className = "hint"; result.textContent = "Sleeping for 5 seconds…";
+          try {
+            const r = await api("/api/device/test", { id: m.id });
+            if (r.ok) { result.className = "ok"; result.textContent = "Woke up again over DDC/CI. Safe to automate."; }
+            else { result.className = "err"; result.textContent = r.error || `Didn't come back on (power mode ${r.power_code}).`; }
+          } catch (e) { result.className = "err"; result.textContent = e.message; }
+          testBtn.disabled = false;
+          refresh();
+        } }, "Test sleep and wake");
+        const power = (on) => async () => {
+          try { await api("/api/device/power", { id: m.id, on }); toast(on ? "Waking" : "Going to sleep"); setTimeout(refresh, 1500); }
+          catch (e) { toast(e.message, true); }
+        };
+        rows.push(el("div", { class: "row" },
+          el("div", { class: "lbl" }, "Power", result),
+          el("div", { class: "ctl" }, el("button", { class: "btn", onclick: power(true) }, "Wake"), el("button", { class: "btn", onclick: power(false) }, "Sleep"), testBtn)));
+      }
+      if (!m.can_brightness && !m.can_power) {
+        rows.push(el("div", { class: "row" }, el("span", { class: "err" }, m.error || "This monitor doesn't offer brightness or power control over DDC/CI.")));
+      } else if (m.error) {
+        rows.push(el("div", { class: "row" }, el("span", { class: "err" }, m.error)));
+      }
+    } else {
+      const seen = m.last_seen ? new Date(m.last_seen).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "never";
+      rows.push(el("div", { class: "row" }, el("div", { class: "lbl" }, "Not connected", el("span", { class: "hint" }, "Last seen " + seen)),
+        el("button", { class: "btn", onclick: async () => {
+          try { render(await api("/api/device", { id: m.id, forget: true })); toast("Forgotten"); } catch (e) { toast(e.message, true); }
+        } }, "Forget")));
+    }
+    return el("div", { class: "card", style: "margin-top:14px" }, rows);
+  }));
+}
+
+// ---------- actions ----------
+async function saveGeneral(patch) {
+  try { render(await api("/api/general", patch)); toast("Saved"); }
+  catch (e) { toast(e.message, true); refresh(); }
+}
+$("start_at_login").addEventListener("change", e => saveGeneral({ start_at_login: e.target.checked }));
+$("open_settings_on_start").addEventListener("change", e => saveGeneral({ open_settings_on_start: e.target.checked }));
+$("off_mode").addEventListener("change", e => saveGeneral({ off_mode: e.target.value }));
+$("poll_seconds").addEventListener("change", e => saveGeneral({ poll_seconds: +e.target.value }));
+
+$("discover").addEventListener("click", async (e) => {
+  const b = e.target; b.disabled = true; b.textContent = "Looking…";
+  try { render(await api("/api/discover", {})); toast("Monitors refreshed"); } catch (err) { toast(err.message, true); }
+  b.disabled = false; b.textContent = "Discover";
+});
+
+document.querySelectorAll("#mqtt input").forEach(i => i.addEventListener("input", () => mqttDirty = true));
+document.querySelectorAll("#mqtt input[type=checkbox]").forEach(i => i.addEventListener("change", () => mqttDirty = true));
+function mqttForm() {
+  return {
+    enabled: $("m_enabled").checked, host: $("m_host").value, port: +$("m_port").value || 0, tls: $("m_tls").checked,
+    username: $("m_username").value, node_name: $("m_node_name").value, base_topic: $("m_base_topic").value,
+    discovery: $("m_discovery").checked, discovery_prefix: $("m_discovery_prefix").value,
+  };
+}
+$("mqttSave").addEventListener("click", async () => {
+  const body = mqttForm();
+  body.password = $("m_password").value;
+  try {
+    const s = await api("/api/mqtt", body);
+    mqttDirty = false; renderMQTT(s, true); render(s);
+    $("mqttMsg").textContent = body.enabled ? "Saved. Connecting…" : "Saved. MQTT is off.";
+  } catch (e) { $("mqttMsg").textContent = ""; toast(e.message, true); }
+});
+$("pwClear").addEventListener("click", async () => {
+  const body = mqttForm(); body.clear_password = true;
+  try { const s = await api("/api/mqtt", body); mqttDirty = false; renderMQTT(s, true); render(s); toast("Password removed"); }
+  catch (e) { toast(e.message, true); }
+});
+document.querySelectorAll("[data-open]").forEach(b => b.addEventListener("click", () => api("/api/open", { what: b.dataset.open }).catch(e => toast(e.message, true))));
+
+async function refresh() {
+  try { render(await api("/api/state")); } catch (e) { $("status").textContent = "Lost contact with nodoff"; $("dot").className = "dot bad"; }
+}
+refresh();
+setInterval(refresh, 4000);
+
+// Close the window when nodoff quits or restarts (its port and key change, so this page is dead).
+const es = new EventSource("/api/events?k=" + encodeURIComponent(KEY));
+let hello = false;
+es.addEventListener("hello", () => hello = true);
+es.onerror = () => { if (hello) { es.close(); window.close(); } };
+</script>
+</body>
+</html>
