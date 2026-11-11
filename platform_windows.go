@@ -31,6 +31,8 @@ func claimSingleInstance() bool {
 	_, err := windows.CreateMutex(nil, false, mn)
 	if err == windows.ERROR_ALREADY_EXISTS {
 		if ev, err := windows.OpenEvent(windows.EVENT_MODIFY_STATE, false, en); err == nil {
+			// Let the running copy bring its panel window in front of ours.
+			windows.NewLazySystemDLL("user32.dll").NewProc("AllowSetForegroundWindow").Call(^uintptr(0)) // ASFW_ANY
 			windows.SetEvent(ev)
 			windows.CloseHandle(ev)
 		}

@@ -2,7 +2,7 @@
 
 ## Status on 2026-11-11
 
-Version 0.1.0 is built and running on the test PC (two Lenovo L28u-30). Checked so far:
+Version 0.1.1 is built and running on the test PC (two Lenovo L28u-30). Checked so far:
 
 - [x] Discovery finds both monitors and names them from the EDID (IDs `len65fa_v9k27xqa`, `len65fa_v9k31mtd`).
 - [x] MQTT: connects, publishes status, availability, power and brightness, and the Home Assistant discovery configs (checked against a throwaway Mosquitto, not a real Home Assistant yet).

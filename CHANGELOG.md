@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 (unreleased)
+
+- Opening settings while the panel is already open brings that window to the front. Before, every open started another window.
+
 ## 0.1.0 (unreleased)
 
 First version.

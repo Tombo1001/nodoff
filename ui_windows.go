@@ -29,8 +29,12 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
+	"unsafe"
+
+	"golang.org/x/sys/windows"
 
 	"nodoff/internal/logo"
 	"nodoff/internal/settings"
@@ -44,6 +48,9 @@ var (
 	uiAddr string // host:port, set once the listener is up
 	uiOnce sync.Once
 	uiUp   = make(chan struct{})
+
+	// uiPages counts open panel pages: each one holds an /api/events stream.
+	uiPages atomic.Int32
 )
 
 func randomHex(n int) string {
@@ -101,6 +108,8 @@ func settingsServer() error {
 		}
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-store")
+		uiPages.Add(1)
+		defer uiPages.Add(-1)
 		fmt.Fprintf(w, "event: hello\ndata: %s\n\n", version)
 		fl.Flush()
 		t := time.NewTicker(15 * time.Second)
@@ -408,6 +417,10 @@ func openSettings() {
 	}
 	lastOpen = time.Now()
 	openMu.Unlock()
+	// One panel window at a time: if a page is already open, bring its window forward.
+	if uiPages.Load() > 0 && focusPanelWindow() {
+		return
+	}
 	url := "http://" + uiAddr + "/?k=" + uiKey
 	for _, base := range []string{os.Getenv("ProgramFiles(x86)"), os.Getenv("ProgramFiles")} {
 		if base == "" {
@@ -426,4 +439,49 @@ func openSettings() {
 	cmd := exec.Command(rundll, "url.dll,FileProtocolHandler", url)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	_ = cmd.Start()
+}
+
+var (
+	user32                  = windows.NewLazySystemDLL("user32.dll")
+	procEnumWindows         = user32.NewProc("EnumWindows")
+	procGetClassName        = user32.NewProc("GetClassNameW")
+	procGetWindowText       = user32.NewProc("GetWindowTextW")
+	procIsWindowVisible     = user32.NewProc("IsWindowVisible")
+	procIsIconic            = user32.NewProc("IsIconic")
+	procShowWindow          = user32.NewProc("ShowWindow")
+	procSetForegroundWindow = user32.NewProc("SetForegroundWindow")
+)
+
+// focusPanelWindow finds the open panel window and brings it to the front, restoring
+// it if minimised. The panel is a Chromium app window whose title is the page title.
+// It reports false when there's no such window, for example when the panel is a tab
+// in another browser.
+func focusPanelWindow() bool {
+	var found uintptr
+	cb := syscall.NewCallback(func(hwnd, _ uintptr) uintptr {
+		if v, _, _ := procIsWindowVisible.Call(hwnd); v == 0 {
+			return 1
+		}
+		var buf [64]uint16
+		procGetClassName.Call(hwnd, uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
+		if windows.UTF16ToString(buf[:]) != "Chrome_WidgetWin_1" {
+			return 1
+		}
+		buf = [64]uint16{}
+		procGetWindowText.Call(hwnd, uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
+		if windows.UTF16ToString(buf[:]) != "nodoff" {
+			return 1
+		}
+		found = hwnd
+		return 0 // stop
+	})
+	procEnumWindows.Call(cb, 0)
+	if found == 0 {
+		return false
+	}
+	if min, _, _ := procIsIconic.Call(found); min != 0 {
+		procShowWindow.Call(found, 9) // SW_RESTORE
+	}
+	procSetForegroundWindow.Call(found)
+	return true
 }
