@@ -11,7 +11,7 @@ import (
 	"github.com/tc-hib/winres"
 	"github.com/tc-hib/winres/version"
 
-	"nodoff/internal/logo"
+	"github.com/Tombo1001/nodoff/internal/logo"
 )
 
 func main() {

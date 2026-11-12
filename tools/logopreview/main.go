@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"nodoff/internal/logo"
+	"github.com/Tombo1001/nodoff/internal/logo"
 )
 
 func main() {

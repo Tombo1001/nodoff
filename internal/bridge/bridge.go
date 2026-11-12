@@ -17,7 +17,6 @@ import (
 // Display is one monitor's state as the bridge sees it.
 type Display struct {
 	ID         string
-	Name       string // the name to show in Home Assistant
 	Present    bool   // plugged in and enumerated right now
 	Power      string // "ON", "OFF" or "" when unknown
 	Brightness int    // 0-100, or -1 when unknown
@@ -157,13 +156,6 @@ func (b *Bridge) Stop(clearDiscovery bool) {
 	} else {
 		b.client.Disconnect(0)
 	}
-}
-
-// Status returns the connection state.
-func (b *Bridge) Status() Status {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	return b.status
 }
 
 // SetDevices sets which monitors are published, by ID with their display names.

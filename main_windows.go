@@ -16,9 +16,9 @@ import (
 	"fyne.io/systray"
 	"golang.org/x/sys/windows"
 
-	"nodoff/internal/bridge"
-	"nodoff/internal/logo"
-	"nodoff/internal/settings"
+	"github.com/Tombo1001/nodoff/internal/bridge"
+	"github.com/Tombo1001/nodoff/internal/logo"
+	"github.com/Tombo1001/nodoff/internal/settings"
 )
 
 var (
@@ -28,8 +28,6 @@ var (
 	bridgeMu  sync.Mutex
 	mqttLink  *bridge.Bridge
 	mqttState bridge.Status
-
-	pollNow = make(chan struct{}, 1)
 
 	mStatus *systray.MenuItem
 )
@@ -43,10 +41,8 @@ func main() {
 	}
 	enableDPIAwareness()
 
-	base, err := os.UserConfigDir() // %APPDATA%; we want the local one
-	if la := os.Getenv("LOCALAPPDATA"); la != "" {
-		base, err = la, nil
-	}
+	// The local (non-roaming) app data folder, asked of Windows and not the environment.
+	base, err := windows.KnownFolderPath(windows.FOLDERID_LocalAppData, 0)
 	if err != nil {
 		fatal("can't find a folder for settings: %v", err)
 	}
@@ -91,24 +87,13 @@ func main() {
 	systray.Run(onReady, func() {})
 }
 
-// poller re-reads every monitor on the poll interval, or straight away when asked.
+// poller re-reads every monitor on the poll interval.
 func poller() {
 	for {
-		wait := time.Duration(store.Get().PollSeconds) * time.Second
-		select {
-		case <-time.After(wait):
-		case <-pollNow:
-		}
+		time.Sleep(time.Duration(store.Get().PollSeconds) * time.Second)
 		if err := mons.scan(false); err != nil {
 			log.Printf("scan: %v", err)
 		}
-	}
-}
-
-func requestPoll() {
-	select {
-	case pollNow <- struct{}{}:
-	default:
 	}
 }
 

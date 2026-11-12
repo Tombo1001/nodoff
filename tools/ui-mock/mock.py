@@ -2,14 +2,16 @@
 """Serve ui.html with a fake API, so the settings panel can be viewed and screenshotted
 in any browser without Windows. Not part of the app.
 
-    python3 tools/ui-mock/mock.py [port]     then open http://<host>:<port>/?k=x
+    python3 tools/ui-mock/mock.py [port] [bind address]     then open http://127.0.0.1:<port>/?k=x
+
+It binds to 127.0.0.1 unless you give another address.
 """
 import json, sys, pathlib, http.server
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HTML = (ROOT / "ui.html").read_text(encoding="utf-8")
 STATE = {
-    "version": "0.2.0", "go": "go1.26.11", "host": "DESK-PC",
+    "version": "0.2.1", "go": "go1.26.11", "host": "DESK-PC",
     "data_dir": r"C:\Users\you\AppData\Local\nodoff",
     "general": {"open_settings_on_start": False, "poll_seconds": 30, "off_mode": "standby",
                 "start_at_login": True, "start_entry_stale": False,
@@ -60,4 +62,6 @@ class H(http.server.BaseHTTPRequestHandler):
         self._json(STATE)
     def log_message(self, *a): pass
 
-http.server.ThreadingHTTPServer(("0.0.0.0", int(sys.argv[1]) if len(sys.argv) > 1 else 8791), H).serve_forever()
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8791
+BIND = sys.argv[2] if len(sys.argv) > 2 else "127.0.0.1"
+http.server.ThreadingHTTPServer((BIND, PORT), H).serve_forever()

@@ -36,8 +36,8 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"nodoff/internal/logo"
-	"nodoff/internal/settings"
+	"github.com/Tombo1001/nodoff/internal/logo"
+	"github.com/Tombo1001/nodoff/internal/settings"
 )
 
 //go:embed ui.html
@@ -46,7 +46,6 @@ var uiHTML string
 var (
 	uiKey  = randomHex(16)
 	uiAddr string // host:port, set once the listener is up
-	uiOnce sync.Once
 	uiUp   = make(chan struct{})
 
 	// uiPages counts open panel pages: each one holds an /api/events stream.
@@ -331,11 +330,11 @@ func settingsServer() error {
 		default:
 			return nil, errors.New("unknown target")
 		}
-		explorer := filepath.Join(os.Getenv("SystemRoot"), "explorer.exe")
-		if os.Getenv("SystemRoot") == "" {
-			explorer = `C:\Windows\explorer.exe`
+		win, err := windows.GetWindowsDirectory()
+		if err != nil {
+			return nil, err
 		}
-		_ = exec.Command(explorer, args...).Start()
+		_ = exec.Command(filepath.Join(win, "explorer.exe"), args...).Start()
 		return map[string]any{"ok": true}, nil
 	})
 
@@ -441,8 +440,11 @@ func openSettings() {
 		return
 	}
 	url := "http://" + uiAddr + "/?k=" + uiKey
-	for _, base := range []string{os.Getenv("ProgramFiles(x86)"), os.Getenv("ProgramFiles")} {
-		if base == "" {
+	// Program paths come from the Windows API, not from environment variables, which
+	// anything that starts nodoff could have changed.
+	for _, id := range []*windows.KNOWNFOLDERID{windows.FOLDERID_ProgramFilesX86, windows.FOLDERID_ProgramFiles} {
+		base, err := windows.KnownFolderPath(id, 0)
+		if err != nil {
 			continue
 		}
 		edge := filepath.Join(base, "Microsoft", "Edge", "Application", "msedge.exe")
@@ -454,8 +456,12 @@ func openSettings() {
 			}
 		}
 	}
-	rundll := filepath.Join(os.Getenv("SystemRoot"), "System32", "rundll32.exe")
-	cmd := exec.Command(rundll, "url.dll,FileProtocolHandler", url)
+	sys, err := windows.GetSystemDirectory()
+	if err != nil {
+		log.Printf("settings panel: %v", err)
+		return
+	}
+	cmd := exec.Command(filepath.Join(sys, "rundll32.exe"), "url.dll,FileProtocolHandler", url)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	_ = cmd.Start()
 }

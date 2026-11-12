@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"nodoff/internal/bridge"
-	"nodoff/internal/ddc"
-	"nodoff/internal/settings"
+	"github.com/Tombo1001/nodoff/internal/bridge"
+	"github.com/Tombo1001/nodoff/internal/ddc"
+	"github.com/Tombo1001/nodoff/internal/settings"
 )
 
 // MonitorView is one monitor as the settings panel shows it.
@@ -123,7 +123,7 @@ func (s *monitorService) readInto(m *ddc.Monitor, st *monState) {
 	s.mu.Lock()
 	caps := st.caps
 	s.mu.Unlock()
-	known := caps.VCP != nil && len(caps.VCP) > 0
+	known := len(caps.VCP) > 0
 	var errs []string
 
 	br, brMax, brErr := -1, uint32(0), error(nil)
@@ -198,7 +198,7 @@ func (s *monitorService) SetPower(id string, on bool) error {
 		s.mu.Lock()
 		caps := st.caps
 		s.mu.Unlock()
-		if caps.VCP != nil && len(caps.VCP) > 0 && !caps.Supports(ddc.VCPPowerMode) {
+		if len(caps.VCP) > 0 && !caps.Supports(ddc.VCPPowerMode) {
 			return errors.New("this monitor doesn't offer power control over DDC/CI")
 		}
 		v := uint16(ddc.PowerOn)

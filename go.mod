@@ -1,4 +1,4 @@
-module nodoff
+module github.com/Tombo1001/nodoff
 
 go 1.26.11
 
